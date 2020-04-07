@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+    <h1>Quiz app</h1>
+
+
+    {% if messages %}
+      {% for message in messages %}
+        <div>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}
+    {% endblock%}
+
+</body>
+</html>

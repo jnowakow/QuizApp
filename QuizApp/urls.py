@@ -15,8 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+from users import views as users_views
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('registration/', users_views.register, name='Registration'),
     path('', include('quiz.urls')), #the home page whole project will be the home page of quiz application
 ]
