@@ -1,0 +1,24 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h1>{{ quiz.author }}</h1>
+        <h2>{{ quiz.title }}</h2>
+        <div class="ml-5">
+            {% for question in questions %}
+                <a href="/question/{{ question.id }}" class="btn btn-outline-primary">{{ question.question }}</a>
+                <div class="ml-3">
+                    {% for answer in question.answer_set.all %}
+                        <h4>{{ answer.answer }}</h4>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <h2>New Question</h2>
+    <form method="POST" class="post-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="save btn btn-default">Save</button>
+    </form>
+{% endblock %}

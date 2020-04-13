@@ -1,0 +1,21 @@
+{% extends "quiz/base.html" %}
+
+{% block content %}
+    <div class="container">
+        <h1>{{ quiz.author }}, {{ user.username }}</h1>
+        <h2>{{ quiz.title }}</h2>
+        <div class="ml-5">
+            {% for question in questions %}
+                <a href="/question/{{ question.id }}" class="btn btn-outline-primary">{{ question.question }}</a>
+                <div class="ml-3">
+                    {% for answer in question.answer_set.all %}
+                        <h4>{{ answer.answer }}</h4>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% if user == quiz.author %}
+            <a href="/addquestion/{{ quiz.id }}"><h2>Add question</h2></a>
+        {% endif %}
+        </div>
+    </div>
+{% endblock %}
