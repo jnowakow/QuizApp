@@ -6,6 +6,18 @@
         <a href="{% url 'Logout' %}">Logout</a>
     {% else %}
         <a href="{% url 'Login' %}">Login</a>
-        <a href="{% url 'Registration' %}">Sign Up</a> 
+        <a href="{% url 'Registration' %}">Sign Up</a>
     {% endif %}
-{% endblock%}
+    <div class="container">
+        {% for quiz in quizes %}
+            <a href="/details/{{ quiz.pk }}">
+                <h1>{{ quiz.title }}</h1>
+            </a>
+            <h2>{{ quiz.author }}</h2>
+        {% endfor %}
+    <br>
+        {% if user.is_authenticated %}
+            <a href="/add"><h2>Add Quiz</h2></a>
+        {% endif %}
+    </div>
+{% endblock %}
