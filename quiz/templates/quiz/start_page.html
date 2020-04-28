@@ -1,0 +1,15 @@
+{% extends "quiz/base.html" %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<a href="{% url 'Profile' %}">Profile</a>
+<a href="{% url 'Logout' %}">Logout</a>
+{% else %}
+<a href="{% url 'Login' %}">Login</a>
+<a href="{% url 'Registration' %}">Sign Up</a>
+{% endif %}
+<div class="container">
+    <p>Welocome on QuizApp webiste!</p>
+    <p>Log in or register to start creating and answering quizes</p>
+</div>
+{% endblock %}

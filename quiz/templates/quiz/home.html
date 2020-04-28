@@ -1,23 +1,52 @@
 {% extends "quiz/base.html" %}
 
 {% block content %}
-    {% if user.is_authenticated %}
-        <a href="{% url 'Profile' %}">Profile</a>
-        <a href="{% url 'Logout' %}">Logout</a>
-    {% else %}
-        <a href="{% url 'Login' %}">Login</a>
-        <a href="{% url 'Registration' %}">Sign Up</a>
-    {% endif %}
-    <div class="container">
-        {% for quiz in quizes %}
-            <a href="/details/{{ quiz.pk }}">
-                <h1>{{ quiz.title }}</h1>
+{% if user.is_authenticated %}
+<a href="{% url 'Profile' %}">Profile</a>
+<a href="{% url 'Logout' %}">Logout</a>
+{% else %}
+<a href="{% url 'Login' %}">Login</a>
+<a href="{% url 'Registration' %}">Sign Up</a>
+{% endif %}
+<div class="container">
+    <h1> Your open attempts: </h1>
+    {% for attempt in attempts %}
+            {% if attempt.author == user %}
+                <a href="/take/{{ attempt.pk }}">
+                    <h2>{{ attempt.quiz.title }}</h2>
+                </a>
+            {% endif %}
+    {% endfor %}
+
+
+    <h1> Avaiable quizes: </h1>
+    {% for quiz in quizes %}
+        {% if quiz.is_active %}
+            <a href="/attempt/{{ quiz.pk }}">
+                <h2>{{ quiz.title }}</h2>
             </a>
-            <h2>{{ quiz.author }}</h2>
-        {% endfor %}
-    <br>
-        {% if user.is_authenticated %}
-            <a href="/add"><h2>Add Quiz</h2></a>
         {% endif %}
-    </div>
+    {% endfor %}
+
+    <h1> Your quizes: </h1>
+    {% for quiz in quizes %}
+    {% if user == quiz.author %}
+    <a href="/details/{{ quiz.pk }}">
+        <h2>{{ quiz.title }}</h2>
+        {% if quiz.is_active %}
+            <a href="deactivatequiz/{{quiz.pk}}">Deativate</a>
+        {% else %}
+            <a href="activatequiz/{{quiz.pk}}">Activate</a>
+        {% endif %}
+    </a>
+
+    {% endif %}
+    {% endfor %}
+    <br>
+    {% if user.is_authenticated %}
+    <a href="/add">
+        <h2>Add Quiz</h2>
+    </a>
+    {% endif %}
+</div>
 {% endblock %}

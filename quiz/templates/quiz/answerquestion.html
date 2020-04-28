@@ -1,0 +1,19 @@
+{% extends "quiz/base.html" %}
+
+{% block content %}
+    <div class="container">
+        <h1>{{ question.quiz.title }}</h1>
+        <h2>{{ question.question }}</h2>
+        <div class="ml-5">
+            {% for answer in question.answer_set.all %}
+                <h4>{{ answer.answer }}</h4>
+            {% endfor %}
+        </div>
+        <h2>Select answers:</h2>
+        <form method="POST" class="post-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="save btn btn-default">Save</button>
+        </form>
+    </div>
+{% endblock %}
