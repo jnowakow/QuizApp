@@ -6,3 +6,5 @@ from .models import *
 admin.site.register(Quiz)
 admin.site.register(Answer)
 admin.site.register(Question)
+admin.site.register(Attempt)
+admin.site.register(User_Answer)

@@ -1,7 +1,9 @@
 {% extends 'quiz/base.html' %}
 
 {% block content %}
-    <h2>New quiz</h2>
+    
+    <h2>{{ quiz.title }}</h2>
+    <h3>Do you want to start this quiz?</h3>
     <form method="POST" class="post-form">
         {% csrf_token %}
         {{ form.as_p }}
