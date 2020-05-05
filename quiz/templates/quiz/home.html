@@ -11,18 +11,25 @@
 <div class="container">
     <h1> Your open attempts: </h1>
     {% for attempt in attempts %}
-            {% if attempt.author == user %}
+            {% if attempt.author == user and attempt.attemptquestion_set.count != 0 %}
+                <a href="/take/{{ attempt.pk }}">
+                    <h2>{{ attempt.quiz.title }}</h2>
+                </a>
+            {% endif %}
+    {% endfor %}
+    <h1> Your finished attempts: </h1>
+    {% for attempt in attempts %}
+            {% if attempt.author == user and attempt.attemptquestion_set.count == 0 %}
                 <a href="/take/{{ attempt.pk }}">
                     <h2>{{ attempt.quiz.title }}</h2>
                 </a>
             {% endif %}
     {% endfor %}
 
-
     <h1> Avaiable quizes: </h1>
     {% for quiz in quizes %}
         {% if quiz.is_active %}
-            <a href="/attempt/{{ quiz.pk }}">
+            <a href="{% url 'Quiz-Attempt' quiz.pk  %}">
                 <h2>{{ quiz.title }}</h2>
             </a>
         {% endif %}
@@ -31,12 +38,12 @@
     <h1> Your quizes: </h1>
     {% for quiz in quizes %}
     {% if user == quiz.author %}
-    <a href="/details/{{ quiz.pk }}">
+    <a href="{% url 'Quiz-Details' quiz.pk %}">
         <h2>{{ quiz.title }}</h2>
         {% if quiz.is_active %}
-            <a href="deactivatequiz/{{quiz.pk}}">Deativate</a>
+            <a href="{% url 'Quiz-Deactivation' quiz.pk %}">Deactivate</a>
         {% else %}
-            <a href="activatequiz/{{quiz.pk}}">Activate</a>
+            <a href="{% url 'Quiz-Activation' quiz.pk %}">Activate</a>
         {% endif %}
     </a>
 
