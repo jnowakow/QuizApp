@@ -1,0 +1,26 @@
+{% extends "quiz/base.html" %}
+
+{% block content %}
+
+    {% for qna in qnas %}
+        <h1>{{ qna.get_question.question }}</h1>
+
+
+
+        {% if qna.answers_correct %}
+            <h1 class="text-success">answered correctly</h1>
+        {% else %}
+            <h1 class="text-danger">answered wrong</h1>
+        {% endif %}
+        <h2>User answers:</h2>
+        <ul>{% for ans in qna.get_answer %}
+            <li>{{ ans.answer }}</li>
+        {% endfor %}</ul>
+        <h2>Correct answers:</h2>
+        <ul>{% for ans in qna.ca %}
+            <li>{{ ans.answer }}</li>
+        {% endfor %}</ul>
+
+    {% endfor %}
+
+{% endblock %}

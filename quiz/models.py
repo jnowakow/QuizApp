@@ -12,13 +12,16 @@ class Quiz(models.Model):
     def __str__(self):
         return self.title
 
+
 class Question(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     question = models.TextField()
+
     # multipleAnsw = models.BooleanField()
 
     def __str__(self):
         return self.question[:10]
+
 
 class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -26,8 +29,9 @@ class Answer(models.Model):
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return "{}, {}".format(self.answer[:5], self.is_correct)
-    
+        return self.answer
+
+
 class Attempt(models.Model):
     author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
@@ -36,10 +40,18 @@ class Attempt(models.Model):
         return "lala"
 
 
-#user answer is table connecting Solution with Question and Answer
-#each user's answer has a attempt to which it coressponds (Attempt),
-#question and answer
+class AttemptQuestion(models.Model):
+    attempt = models.ForeignKey(Attempt, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+
+# user answer is table connecting Solution with Question and Answer
+# each user's answer has a attempt to which it coressponds (Attempt),
+# question and answer
 class User_Answer(models.Model):
     attempt = models.ForeignKey(Attempt, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.answer.answer

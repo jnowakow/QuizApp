@@ -23,7 +23,7 @@ class QuestionForm(forms.Form):
     is_correct4 = forms.BooleanField(required=False)
 
     def is_valid(self):
-        valid =  super(QuestionForm, self).is_valid()
+        valid = super(QuestionForm, self).is_valid()
 
         if not valid:
             return valid
