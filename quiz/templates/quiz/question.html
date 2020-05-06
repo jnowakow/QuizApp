@@ -9,5 +9,13 @@
                 <h4>{{ answer.answer }}</h4>
             {% endfor %}
         </div>
+        {% if form %}
+            <h2>Edit question</h2>
+            <form method="POST" class="post-form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="save btn btn-default">Save</button>
+            </form>
+        {% endif %}
     </div>
 {% endblock %}
