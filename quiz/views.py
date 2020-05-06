@@ -1,10 +1,16 @@
 # this will schearch templates directory for html docs
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from wheel.signatures.djbec import q
+
 from .forms import *
 
 def start_page(request):
     return render(request, 'quiz/start_page.html')
+
+def start_page(request):
+    return render(request, 'quiz/start_page.html')
+
 
 def home(request):
     if not request.user.is_authenticated:
@@ -14,6 +20,8 @@ def home(request):
         'quizes': Quiz.objects.filter(),
         'attempts': Attempt.objects.all()
     }
+    for attempt in Attempt.objects.all():
+        print(attempt)
     return render(request, 'quiz/home.html', context)
 
 
@@ -56,7 +64,7 @@ def addQuestion(request, quizid):
             a1 = q.answer_set.create(
                 answer=form.cleaned_data['answer1'], is_correct=form.cleaned_data['is_correct1'])
             a2 = q.answer_set.create(
-                answer=form.cleaned_data['answer2'],  is_correct=form.cleaned_data['is_correct2'])
+                answer=form.cleaned_data['answer2'], is_correct=form.cleaned_data['is_correct2'])
             q.save()
             a1.save()
             a2.save()
@@ -103,6 +111,8 @@ def deactivate_quiz(request, quizid):
 def answer_question(request, questionid, attemptid):
     question = Question.objects.get(pk=questionid)
     attempt = Attempt.objects.get(pk=attemptid)
+    if User_Answer.objects.filter(attempt_id=attemptid, question_id=questionid).first():
+        return redirect('Take-Quiz', attemptid=attemptid)
 
     if request.method == 'POST':
         form = UserAnswerForm(request.POST)
@@ -117,7 +127,6 @@ def answer_question(request, questionid, attemptid):
 
                 elif is_correct and answer_num == 'is_correct2':
                     user_answer = User_Answer.objects.create(attempt=attempt, question=question, answer=answers[1])
-                    
                 elif is_correct and answer_num == 'is_correct3':
                     user_answer = User_Answer.objects.create(attempt=attempt, question=question, answer=answers[2])
 
@@ -127,7 +136,6 @@ def answer_question(request, questionid, attemptid):
             return redirect('Take-Quiz', attemptid=attemptid)
     else:
         form = UserAnswerForm()
-    
     context = {
         'form': form,
         'question': question
@@ -136,15 +144,54 @@ def answer_question(request, questionid, attemptid):
     return render(request, 'quiz/answerquestion.html', context=context)
 
 
+# def take_quiz(request, attemptid):
+#     attempt = Attempt.objects.get(pk=attemptid)
+#     quiz = attempt.quiz
+#     context = {
+#         'quiz': quiz,
+#         'questions': quiz.question_set.all(),
+#         'attempt': attempt
+#     }
+#     return render(request, 'quiz/take.html', context)
+
+
 def take_quiz(request, attemptid):
     attempt = Attempt.objects.get(pk=attemptid)
-    quiz = attempt.quiz
+    if attempt.attemptquestion_set.count() == 0:
+        return redirect('Quiz-Summary', attemptid)
+    aq = attempt.attemptquestion_set.first()
+    q = aq.question
+
+    if request.method == 'POST':
+        form = UserAnswerForm(request.POST)
+
+        if form.is_valid():
+            answers = list(q.answer_set.all())
+            answers.sort(key=lambda x: x.pk)
+
+            for answer_num, is_correct in form.cleaned_data.items():
+                if is_correct and answer_num == 'is_correct1':
+                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[0])
+
+                elif is_correct and answer_num == 'is_correct2':
+                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[1])
+
+                elif is_correct and answer_num == 'is_correct3':
+                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[2])
+
+                elif is_correct and answer_num == 'is_correct4':
+                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[3])
+            aq.delete()
+            return redirect('Take-Quiz', attemptid=attemptid)
+    else:
+        form = UserAnswerForm()
+
     context = {
-        'quiz': quiz,
-        'questions': quiz.question_set.all(),
-        'attempt': attempt
+        'form': form,
+        'question': q
     }
-    return render(request, 'quiz/take.html', context)
+
+    return render(request, 'quiz/answerquestion.html', context=context)
 
 
 def quiz_attempt(request, quizid):
@@ -152,17 +199,74 @@ def quiz_attempt(request, quizid):
 
     if request.method == 'POST':
         form = AttemptForm(request.POST)
-        
+
         if form.is_valid() and form.cleaned_data['new_attempt']:
             attempt = quiz.attempt_set.create(author=request.user)
+            questions = quiz.question_set.all()
+            for q in questions:
+                attempt.attemptquestion_set.create(attempt=attempt, question=q)
             print("lala")
-            return redirect('Quiz-Home')
-        
+            return redirect('Take-Quiz', attempt.id)
+
     else:
         form = AttemptForm()
-
     context = {
         'form': form,
-        'quiz':  quiz
+        'quiz': quiz
     }
     return render(request, 'quiz/attempt.html', context)
+
+
+class Qna:
+    def __init__(self, questionid, attemptid):
+        self.q = Question.objects.get(pk=questionid)
+        self.a = User_Answer.objects.filter(attempt_id=attemptid, question_id=questionid)
+        self.ca = Answer.objects.filter(question=questionid, is_correct=True)
+
+    def get_question(self):
+        return self.q
+
+    def get_answer(self):
+        return self.a
+
+    def answers_correct(self):
+        if self.a.count() != self.ca.count():
+            return False
+        for ans in self.a:
+            if not self.ca.filter(pk=ans.answer.pk).exists():
+                return False
+        return True
+
+
+def quiz_summary(request, attemptid):
+    attempt = Attempt.objects.get(pk=attemptid)
+    quiz = attempt.quiz
+    questions = quiz.question_set.all()
+    qnas = []
+    for q in questions:
+        qnas.append(Qna(q.pk, attemptid))
+    context = {
+        'qnas': qnas
+    }
+    return render(request, 'quiz/summary.html', context)
+
+
+# def quiz_attempt(request, quizid):
+#     quiz = Quiz.objects.get(pk=quizid)
+#
+#     if request.method == 'POST':
+#         form = AttemptForm(request.POST)
+#
+#         if form.is_valid() and form.cleaned_data['new_attempt']:
+#             attempt = quiz.attempt_set.create(author=request.user)
+#             print("lala")
+#             return redirect('Quiz-Home')
+#
+#     else:
+#         form = AttemptForm()
+#
+#     context = {
+#         'form': form,
+#         'quiz': quiz
+#     }
+#     return render(request, 'quiz/attempt.html', context)
