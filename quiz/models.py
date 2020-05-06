@@ -8,6 +8,7 @@ class Quiz(models.Model):
     author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     title = models.CharField(max_length=100)
     is_active = models.BooleanField(default=False)
+    is_editable= models.BooleanField(default=True)
 
     def __str__(self):
         return self.title
@@ -28,7 +29,7 @@ class Answer(models.Model):
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.answer
+        return self.answer[:10]
 
 
 class Attempt(models.Model):
@@ -36,7 +37,7 @@ class Attempt(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
 
     def __str__(self):
-        return "lala"
+        return self.quiz.__str__
 
 
 class AttemptQuestion(models.Model):

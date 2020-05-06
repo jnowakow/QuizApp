@@ -20,7 +20,10 @@
                 </div>
             {% endfor %}
         {% if user == quiz.author %}
-            <a href="/addquestion/{{ quiz.id }}"><h2>Add question</h2></a>
+            {% if quiz.is_editable %}
+                <a href="/addquestion/{{ quiz.id }}"><h2>Add question</h2></a>
+            {% endif %}
+            <a href="/stats/{{ quiz.id }}"><h2>View statistics</h2></a>
         {% endif %}
         </div>
     </div>
