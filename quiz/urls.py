@@ -7,14 +7,14 @@ urlpatterns = [
     path('', views.start_page, name='Start-Page'),
     path('home/', views.home, name='Quiz-Home'),
     path('details/<int:quizid>/', views.details, name='Quiz-Details'),
-    path('question/<int:questionid>/', views.question, name='Quiz-Question'),
+    path('question/<int:question_id>/', views.question, name='Quiz-Question'),
     path('add/', views.add, name='Quiz-Add'),
     path('addquestion/<int:quizid>', views.addQuestion, name='Quiz-AddQuestion'),
     path('activatequiz/<int:quizid>', views.activate_quiz, name='Quiz-Activation'),
     path('deactivatequiz/<int:quizid>', views.deactivate_quiz, name='Quiz-Deactivation'),
     path('take/<int:attemptid>', views.take_quiz, name='Take-Quiz'),
-    path('attempt/<int:quizid>', views.quiz_attempt, name='Quiz-Attempt'),
+    path('attempt/<int:quiz_id>', views.quiz_attempt, name='Quiz-Attempt'),
     path('summary/<int:attemptid>', views.quiz_summary, name='Quiz-Summary'),
-    path('stats/<int:quizid>', views.statistics, name="Quiz-Stats"),
+    path('stats/<int:quiz_id>', views.statistics, name="Quiz-Stats"),
     path('answerquestion/<int:questionid>/<int:attemptid>', views.answer_question, name="Anwer-Question")
 ]

@@ -3,12 +3,14 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 
 from plotly.offline import plot
-from plotly.graph_objects import Bar, Layout
+import plotly.graph_objects as go 
 
 from .forms import *
 
 
 def start_page(request):
+    if request.user.is_authenticated:
+        return redirect('Quiz-Home')
     return render(request, 'quiz/start_page.html')
 
 
@@ -24,7 +26,6 @@ def home(request):
     return render(request, 'quiz/home.html', context)
 
 
-
 def details(request, quizid):
     context = {
         'quiz': Quiz.objects.get(pk=quizid),
@@ -33,50 +34,92 @@ def details(request, quizid):
     return render(request, 'quiz/details.html', context)
 
 
-def question(request, questionid):
-    question = Question.objects.get(pk=questionid)
+def set_initial_edit_form(question, answers):
+    initial = {'question': question.question}
+    ans = 'answer'
+    is_cor = 'is_correct'
+    for i in range(len(answers)):
+        initial[ans+str(i+1)] = answers[i]
+        initial[is_cor+str(i+1)] = answers[i].is_correct
+
+    return initial
+
+
+def question(request, question_id):
+    question = Question.objects.get(pk=question_id)
+    answers = list(question.answer_set.all())
+    answers.sort(key=lambda x: x.pk)
+    initial = set_initial_edit_form(question, answers)
 
     if request.method == "POST":
         form = EditForm(request.POST)
         if form.is_valid():
-            new_question=form.cleaned_data['question']
-            if new_question:
-                question.question = new_question
-                question.save()
+            if form.cleaned_data['delete_question']:
+                question.delete()
+                return redirect('Quiz-Details', question.quiz.pk)
+            else:
+                new_question = form.cleaned_data['question']
+                if new_question:
+                    question.question = new_question
+                    question.save()
 
-            answers = list(question.answer_set.all())
-            answers.sort(key=lambda x: x.pk)
-            if form.cleaned_data['answer1']:
-                print(answers[0])
-                answers[0].answer= form.cleaned_data['answer1']
-                answers[0].is_correct = form.cleaned_data['is_correct1']
-                answers[0].save()
-                print(answers[0])
-            if form.cleaned_data['answer2']:
-                answers[1].answer= form.cleaned_data['answer2']
-                answers[1].is_correct = form.cleaned_data['is_correct2']
-                answers[1].save()
-            if form.cleaned_data['answer3']:
-                if len(answers) > 2:
-                    answers[2].answer= form.cleaned_data['answer3']
-                    answers[2].is_correct = form.cleaned_data['is_correct3']
-                    answers[2].save()
-                else:
-                    a3 = question.answer_set.create(
-                    answer=form.cleaned_data['answer3'], is_correct=form.cleaned_data['is_correct3'])
-                    a3.save()
-            if form.cleaned_data['answer4']:
-                if len(answers) > 3:
-                    answers[3].answer= form.cleaned_data['answer4']
-                    answers[3].is_correct = form.cleaned_data['is_correct4']
-                    answers[3].save()
-                else:
-                    a4 = question.answer_set.create(
-                    answer=form.cleaned_data['answer4'], is_correct=form.cleaned_data['is_correct4'])
-                    a4.save()
-        
+                if form.cleaned_data['answer1']:
+                    answers[0].answer = form.cleaned_data['answer1']
+                    answers[0].is_correct = form.cleaned_data['is_correct1']
+                    answers[0].save()
+
+                if form.cleaned_data['answer2']:
+                    answers[1].answer = form.cleaned_data['answer2']
+                    answers[1].is_correct = form.cleaned_data['is_correct2']
+                    answers[1].save()
+
+                if form.cleaned_data['answer3']:
+                    if len(answers) > 2:
+                        answers[2].answer = form.cleaned_data['answer3']
+                        answers[2].is_correct = form.cleaned_data['is_correct3']
+                        answers[2].save()
+                    else:
+                        a3 = question.answer_set.create(
+                            answer=form.cleaned_data['answer3'], is_correct=form.cleaned_data['is_correct3']
+                        )
+                        a3.save()
+                if form.cleaned_data['answer4']:
+                    if len(answers) > 3:
+                        answers[3].answer = form.cleaned_data['answer4']
+                        answers[3].is_correct = form.cleaned_data['is_correct4']
+                        answers[3].save()
+                    else:
+                        a4 = question.answer_set.create(
+                            answer=form.cleaned_data['answer4'], is_correct=form.cleaned_data['is_correct4']
+                        )
+                        a4.save()
+                if form.cleaned_data['delete_answer_1']:
+                    answers[0].delete()
+                if form.cleaned_data['delete_answer_2']:
+                    answers[1].delete()
+                if form.cleaned_data['delete_answer_3']:
+                    answers[2].delete()
+                if form.cleaned_data['delete_answer_4']:
+                    answers[3].delete()
+        else:
+            error_msg = form.errors.get('no_correct_answer', None)
+            if error_msg is not None:
+                messages.error(request, error_msg)
+
+            error_msg = form.errors.get('question_err', None)
+            if error_msg is not None:
+                messages.error(request, error_msg)
+
+            error_msg = form.errors.get('answers_num', None)
+            if error_msg is not None:
+                messages.error(request, error_msg)
+
+            error_msg = form.errors.get('deletion_err', None)
+            if error_msg is not None:
+                messages.error(request, error_msg)
+
     else:
-        form = EditForm()
+        form = EditForm(initial=initial)
 
     context = {
         'question': question
@@ -122,14 +165,13 @@ def addQuestion(request, quizid):
                 a4 = q.answer_set.create(
                     answer=form.cleaned_data['answer4'], is_correct=form.cleaned_data['is_correct4'])
                 a4.save()
+
+            form = QuestionForm()
         else:
-            error_msg = form._errors.get('no_correct_answer', None)
+            error_msg = form.errors.get('no_correct_answer', None)
             if error_msg is not None:
                 messages.error(request, error_msg)
-            
-            error_msg = form._errors.get('wrong_order', None)
-            if error_msg is not None:
-                messages.error(request, error_msg)
+
 
     else:
         form = QuestionForm()
@@ -235,8 +277,8 @@ def take_quiz(request, attemptid):
     return render(request, 'quiz/answerquestion.html', context=context)
 
 
-def quiz_attempt(request, quizid):
-    quiz = Quiz.objects.get(pk=quizid)
+def quiz_attempt(request, quiz_id):
+    quiz = Quiz.objects.get(pk=quiz_id)
 
     if request.method == 'POST':
         form = AttemptForm(request.POST)
@@ -278,6 +320,7 @@ class Qna:
                 return False
         return True
 
+
 def count_attempt_results(attempt):
     count = 0
     questions = attempt.quiz.question_set.all()
@@ -294,9 +337,7 @@ def count_attempt_results(attempt):
             key = "Question "+str(i+1)
             question_stats[key] = question_stats[key] + 1
 
-    
     return qnas, count, question_stats
-
 
 
 def quiz_summary(request, attemptid):
@@ -306,7 +347,7 @@ def quiz_summary(request, attemptid):
 
     question_numbers = list(questions_stats.keys())
     right_answers = list(questions_stats.values())
-    questions_bar = plot({"data": [Bar(x=question_numbers,  y=right_answers, name="Points", showlegend=True)],
+    questions_bar = plot({"data": [go.Bar(x=question_numbers,  y=right_answers, name="Points", showlegend=True)],
                           "layout": {"title": {"text": "Points per question"}}},
                     output_type='div')
 
@@ -322,14 +363,13 @@ def quiz_summary(request, attemptid):
     return render(request, 'quiz/summary.html', context)
 
 
-
 def update_dict(dict1, dict2):
     for key, value in dict2.items():
         dict1[key] = dict1.get(key, 0) + value
 
 
-def statistics(request, quizid):
-    attempts = Quiz.objects.get(pk=quizid).attempt_set.all()
+def statistics(request, quiz_id):
+    attempts = Quiz.objects.get(pk=quiz_id).attempt_set.all()
 
     stats = dict()
     question_stats = dict()
@@ -341,20 +381,34 @@ def statistics(request, quizid):
 
     results = list(stats.keys())
     users_number = list(stats.values())
-    plot_div = plot({"data": [Bar(x=results,  y=users_number, name="Number of useres", showlegend=True)]},
-                    output_type='div')
+    total_users_number = sum(users_number)
+
+    total_correct_diff = list(map(lambda x: total_users_number - x, users_number))
+    print(total_correct_diff)
+    
+    summary_bar = go.Bar(x=results,  y=users_number, name="Number of users", showlegend=True)
+    sup_bar = go.Bar(x=results,  y=total_correct_diff, name='Supplement to total number', showlegend=True)
+
+    plot_div = plot({"data": [summary_bar, sup_bar],
+                    "layout": go.Layout(barmode="stack", xaxis=dict(title='Total points', titlefont_size=16))
+                     }, output_type='div')
 
     question_numbers = list(question_stats.keys())
     right_answers = list(question_stats.values())
-    questions_bar = plot({"data": [Bar(x=question_numbers,  y=right_answers, name="Number of correct anserws", showlegend=True)]},
-                    output_type='div')
+    total_answers = len(attempts)
+    wrong_answers = list(map(lambda x: total_answers - x, right_answers))
 
+    correct_answers_bar = go.Bar(x=question_numbers,  y=right_answers, name="Number of correct answers", showlegend=True)
+    wrong_answers_bar = go.Bar(x=question_numbers, y=wrong_answers, name='Number of wrong answers', showlegend=True)
+    questions_bar = plot({"data": [correct_answers_bar, wrong_answers_bar],
+                          "layout": go.Layout(barmode='stack', xaxis=dict(title='Questions summary', titlefont_size=16))
+                          }, output_type='div')
 
     context = {
             'plot_div': plot_div,
             'questions_bar': questions_bar,
             'attempts': attempts
-    }
+            }
     return render(request, "quiz/stats.html", context)
 
 
