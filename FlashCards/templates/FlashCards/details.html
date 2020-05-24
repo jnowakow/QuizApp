@@ -1,0 +1,12 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+    <h2>{{ subject.subject }}</h2>
+        <div class="ml-5">
+            <a href="{%  url 'Known' subject.id  %}" class="btn btn-outline-primary">Known</a>
+            <a href="{%  url 'Practise' subject.id  %}" class="btn btn-outline-primary">To practise</a>
+
+            <a href="{% url 'Add-Card' subject.pk %} "><h2>Add card</h2></a>
+
+        </div>
+{% endblock %}

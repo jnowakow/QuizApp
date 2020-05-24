@@ -1,0 +1,33 @@
+{% extends "quiz/base.html" %}
+
+{% block content %}
+    <div class="container">
+        <a href="{% url 'Subjects-Details' subject.id %}"> <h1>{{ subject.subject }}</h1> </a>
+        {% if show_front == 1 %}
+            <h3>Front side</h3>
+            {% if card.front_side_text %}
+                <p>{{ card.front_side_text }}</p>
+            {% endif %}
+            {% if card.front_side_img %}
+                <img src="{{ card.front_side_img.url }}" alt="img" width="400" height="379" >
+            {% endif %}
+            <a href="{% url 'View-Card' card.id 0 %}">Flip</a>
+        {% else %}
+            <h3>Back side</h3>
+            {% if card.back_side_text %}
+                <p>{{ card.back_side_text }}</p>
+            {% endif %}
+            {% if card.back_side_img %}
+                <img src="{{ card.back_side_img.url }}" alt="img" width="400" height="379" >
+            {% endif %}
+            <a href="{% url 'View-Card' card.id 1 %}">Flip</a>
+        {% endif %}
+        <a href="{% url 'Edit-Card' card.id %}">Edit</a>
+        <form method="POST" class="post-form" >
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="save btn btn-default">Save</button>
+        </form>
+    </div>
+
+{% endblock %}
