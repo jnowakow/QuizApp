@@ -16,8 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from users import views as users_views
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +27,8 @@ urlpatterns = [
     path('profile/', users_views.profile, name='Profile'),
     path('registration/', users_views.register, name='Registration'),
     path('', include('quiz.urls')), #the home page whole project will be the home page of quiz application
+    path('flash_cards/', include('FlashCards.urls'), name='Flash-Cards')
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

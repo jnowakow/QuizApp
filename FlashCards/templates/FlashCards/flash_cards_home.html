@@ -1,0 +1,15 @@
+{% extends "quiz/base.html" %}
+{% block content %}
+  <div class="container">
+      <a href="{% url 'Add-Subject' %}">
+        <h2>New subject</h2>
+      </a>
+
+      <h1> Your flash cards subjects: </h1>
+        {% for subject in subjects %}
+             <a href="{% url 'Subjects-Details' subject.id%}">
+                <h2>{{ subject.subject }}</h2>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}
