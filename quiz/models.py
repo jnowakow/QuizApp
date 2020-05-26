@@ -37,7 +37,7 @@ class Attempt(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.quiz.__str__
+        return self.quiz.__str__()
 
 
 class AttemptQuestion(models.Model):
