@@ -51,7 +51,7 @@ def add_new_card(request, subject_id):
     return render(request, 'FlashCards/add_card.html', context=context)
 
 
-def view_card(request, card_id, side):
+def view_card(request, card_id, side, ):
     card = Card.objects.get(pk=card_id)
     subject = card.subject
 

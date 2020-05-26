@@ -6,6 +6,14 @@
 <body>
     <h1>Quiz app</h1>
     <a href="{% url 'Quiz-Home' %}">Home</a> 
+    {% if user.is_authenticated %}
+        <a href="{% url 'Flash-Cards' %}"> Flash Cards</a>
+        <a href="{% url 'Profile' %}">Profile</a>
+        <a href="{% url 'Logout' %}">Logout</a>
+    {% else %}
+        <a href="{% url 'Login' %}">Login</a>
+        <a href="{% url 'Registration' %}">Sign Up</a>
+    {% endif %}
 
     {% if messages %}
       {% for message in messages %}
