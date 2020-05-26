@@ -1,9 +1,9 @@
 # this will schearch templates directory for html docs
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 from plotly.offline import plot
-import plotly.graph_objects as go 
+import plotly.graph_objects as go
 
 from .forms import *
 
@@ -17,12 +17,12 @@ def start_page(request):
 def home(request):
     if not request.user.is_authenticated:
         return redirect('Start-Page')
-    
+
     context = {
         'quizes': Quiz.objects.filter(),
         'attempts': Attempt.objects.all()
     }
-    
+
     return render(request, 'quiz/home.html', context)
 
 
@@ -39,8 +39,8 @@ def set_initial_edit_form(question, answers):
     ans = 'answer'
     is_cor = 'is_correct'
     for i in range(len(answers)):
-        initial[ans+str(i+1)] = answers[i]
-        initial[is_cor+str(i+1)] = answers[i].is_correct
+        initial[ans + str(i + 1)] = answers[i]
+        initial[is_cor + str(i + 1)] = answers[i].is_correct
 
     return initial
 
@@ -204,11 +204,12 @@ def deactivate_quiz(request, quizid):
 def answer_question(request, questionid, attemptid):
     question = Question.objects.get(pk=questionid)
     attempt = Attempt.objects.get(pk=attemptid)
+    form = AnswerForm(question=question)
     if User_Answer.objects.filter(attempt_id=attemptid, question_id=questionid).first():
         return redirect('Take-Quiz', attemptid=attemptid)
 
     if request.method == 'POST':
-        form = UserAnswerForm(request.POST)
+        form = AnswerForm(request.POST, question=question)
 
         if form.is_valid():
             answers = list(question.answer_set.all())
@@ -237,37 +238,32 @@ def answer_question(request, questionid, attemptid):
     return render(request, 'quiz/answerquestion.html', context=context)
 
 
+import logging
+
 
 def take_quiz(request, attemptid):
+    logger = logging.getLogger("mylogger")
+
+    # Put the logging info within your django view
+
     attempt = Attempt.objects.get(pk=attemptid)
     if attempt.attemptquestion_set.count() == 0:
         return redirect('Quiz-Summary', attemptid)
     aq = attempt.attemptquestion_set.first()
     q = aq.question
+    print(q.question)
+    form = QuizAnswerForm(request.POST or None, question=q)
+    # print(form.cleaned_data)
+    if form.is_valid():
+        answers = list(q.answer_set.all())
+        answers.sort(key=lambda x: x.pk)
 
-    if request.method == 'POST':
-        form = UserAnswerForm(request.POST)
+        print(form.cleaned_data['answers'], "abcdf")
 
-        if form.is_valid():
-            answers = list(q.answer_set.all())
-            answers.sort(key=lambda x: x.pk)
-
-            for answer_num, is_correct in form.cleaned_data.items():
-                if is_correct and answer_num == 'is_correct1':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[0])
-
-                elif is_correct and answer_num == 'is_correct2':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[1])
-
-                elif is_correct and answer_num == 'is_correct3':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[2])
-
-                elif is_correct and answer_num == 'is_correct4':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=q, answer=answers[3])
-            aq.delete()
-            return redirect('Take-Quiz', attemptid=attemptid)
-    else:
-        form = UserAnswerForm()
+        for j in [int(i) for i in form.cleaned_data['answers']]:
+            User_Answer.objects.create(attempt=attempt, question=q, answer=answers[j])
+        aq.delete()
+        return redirect('Take-Quiz', attemptid=attemptid)
 
     context = {
         'form': form,
@@ -275,6 +271,14 @@ def take_quiz(request, attemptid):
     }
 
     return render(request, 'quiz/answerquestion.html', context=context)
+
+
+def quiz_forms(quiz, data=None):
+    questions = Question.objects.filter(quiz=quiz).order_by('id')
+    form_list = []
+    for pos, question in enumerate(questions):
+        form_list.append(QuizAnswerForm(question, data, prefix=pos))
+    return form_list
 
 
 def quiz_attempt(request, quiz_id):
@@ -288,7 +292,7 @@ def quiz_attempt(request, quiz_id):
             questions = quiz.question_set.all()
             for q in questions:
                 attempt.attemptquestion_set.create(attempt=attempt, question=q)
-            
+
             return redirect('Take-Quiz', attempt.id)
 
     else:
@@ -324,31 +328,30 @@ class Qna:
 def count_attempt_results(attempt):
     count = 0
     questions = attempt.quiz.question_set.all()
-    
-    question_stats = {"Question "+str(i+1): 0 for i in range(questions.count())}
+
+    question_stats = {"Question " + str(i + 1): 0 for i in range(questions.count())}
 
     qnas = []
     for question in questions:
         qnas.append(Qna(question.pk, attempt.pk))
-    
+
     for i, qna in enumerate(qnas):
         if qna.answers_correct():
-            count += 1 
-            key = "Question "+str(i+1)
+            count += 1
+            key = "Question " + str(i + 1)
             question_stats[key] = question_stats[key] + 1
 
     return qnas, count, question_stats
 
 
 def quiz_summary(request, attemptid):
-  
     attempt = Attempt.objects.get(pk=attemptid)
     qnas, result, questions_stats = count_attempt_results(attempt)
 
     question_numbers = list(questions_stats.keys())
     right_answers = list(questions_stats.values())
-    questions_bar = plot({"data": [go.Bar(x=question_numbers,  y=right_answers, name="Points per question", showlegend=True)],
-                          "layout": go.Layout(font=dict(size=16))},
+    questions_bar = plot({"data": [go.Bar(x=question_numbers, y=right_answers, name="Points", showlegend=True)],
+                          "layout": {"title": {"text": "Points per question"}}},
                          output_type='div')
 
     context = {
@@ -378,31 +381,32 @@ def statistics(request, quiz_id):
 
     results = list(stats.keys())
     users_number = list(stats.values())
+    total_users_number = sum(users_number)
 
-    summary_pie = go.Pie(values=users_number,  labels=results, name="Number of users", showlegend=True)
+    total_correct_diff = list(map(lambda x: total_users_number - x, users_number))
+    print(total_correct_diff)
 
-    plot_div = plot({"data": [summary_pie],
-                     'layout': go.Layout(legend=dict(title=dict(text='Total result', font=dict(size=20)),
-                                                     font=dict(size=20)))}, output_type='div')
+    summary_bar = go.Bar(x=results, y=users_number, name="Number of users", showlegend=True)
+    sup_bar = go.Bar(x=results, y=total_correct_diff, name='Supplement to total number', showlegend=True)
+
+    plot_div = plot({"data": [summary_bar, sup_bar],
+                     "layout": go.Layout(barmode="stack", xaxis=dict(title='Total points', titlefont_size=16))
+                     }, output_type='div')
 
     question_numbers = list(question_stats.keys())
     right_answers = list(question_stats.values())
     total_answers = len(attempts)
     wrong_answers = list(map(lambda x: total_answers - x, right_answers))
 
-    correct_answers_bar = go.Bar(x=question_numbers,  y=right_answers, name="Number of correct answers", showlegend=True)
+    correct_answers_bar = go.Bar(x=question_numbers, y=right_answers, name="Number of correct answers", showlegend=True)
     wrong_answers_bar = go.Bar(x=question_numbers, y=wrong_answers, name='Number of wrong answers', showlegend=True)
     questions_bar = plot({"data": [correct_answers_bar, wrong_answers_bar],
-                          "layout": go.Layout(barmode='stack',
-                                              xaxis=dict(title='Questions summary', titlefont_size=20),
-                                              font=dict(size=16))
+                          "layout": go.Layout(barmode='stack', xaxis=dict(title='Questions summary', titlefont_size=16))
                           }, output_type='div')
 
     context = {
-            'plot_div': plot_div,
-            'questions_bar': questions_bar,
-            'attempts': attempts
-            }
+        'plot_div': plot_div,
+        'questions_bar': questions_bar,
+        'attempts': attempts
+    }
     return render(request, "quiz/stats.html", context)
-
-

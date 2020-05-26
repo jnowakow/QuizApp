@@ -83,7 +83,7 @@ class EditForm(forms.Form):
         answers = set()
         ans = 'answer'
         for i in range(1, 5):
-            if self.cleaned_data[ans+str(i)]:
+            if self.cleaned_data[ans + str(i)]:
                 answers.add(i)
 
         if len(answers) < 2:
@@ -126,6 +126,32 @@ class UserAnswerForm(forms.Form):
     is_correct2 = forms.BooleanField(required=False)
     is_correct3 = forms.BooleanField(required=False)
     is_correct4 = forms.BooleanField(required=False)
+
+
+class AnswerForm(forms.Form):
+    def __init__(self, data, question):
+        super().__init__(data)
+        field_name = "question_%d" % question.pk
+        choices = []
+        for answer in question.answer_set().all():
+            choices.append((answer.pk, answer.answer,))
+        field = forms.ChoiceField(label=question.question, required=True,
+                                  choices=choices, widget=forms.RadioSelect)
+
+
+class QuizAnswerForm(forms.Form):
+    answers = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple)
+
+    def __init__(self, data, question):
+        super().__init__(data)
+        self.question = question.question
+        answers = question.answer_set.all()
+        self.fields['answers'].choices = [(i, a.answer) for i, a in enumerate(answers)]
+
+        for pos, answer in enumerate(answers):
+            if answer.is_correct:
+                self.correct = pos
+            break
 
 
 class AttemptForm(forms.Form):
