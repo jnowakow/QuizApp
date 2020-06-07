@@ -6,6 +6,7 @@ from plotly.offline import plot
 import plotly.graph_objects as go
 
 from .forms import *
+from .utils.quiz_parser import parse
 
 
 def start_page(request):
@@ -26,10 +27,40 @@ def home(request):
     return render(request, 'quiz/home.html', context)
 
 
-def details(request, quizid):
+def upload_quiz(request, quizid):
+    if request.method == 'POST':
+        form = QuizUploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            parse(request.FILES['quiz_file'], quizid)
+
+            return redirect('Quiz-Details', quizid)
+    else:
+        form = QuizUploadForm()
+
     context = {
-        'quiz': Quiz.objects.get(pk=quizid),
-        'questions': Quiz.objects.get(pk=quizid).question_set.all()
+        'form': form
+    }
+
+    return render(request, 'quiz/upload.html', context)
+
+
+def details(request, quizid):
+    quiz = Quiz.objects.get(pk=quizid)
+
+    if request.method == 'POST':
+        form = QuizDeletionForm(request.POST)
+        if form.is_valid():
+            if form['delete_quiz']:
+                quiz.delete()
+                return redirect('Quiz-Home')
+    else:
+        form = QuizDeletionForm()
+
+    context = {
+        'quiz': quiz,
+        'questions': Quiz.objects.get(pk=quizid).question_set.all(),
+        'form': form
     }
     return render(request, 'quiz/details.html', context)
 

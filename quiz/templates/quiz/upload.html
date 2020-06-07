@@ -1,0 +1,29 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+    <h2>Upload questions from file</h2>
+    <p>
+        File format rules:
+    </p>
+    <ul>
+            <li> line with question starts with "Q: " </li>>
+            <li> line with answer starts with "A: " </li>>
+            <li> line with correct answer should end with "T" </li>>
+    </ul>
+    <p> Exemple file: </p>
+    <p> Q: Who was first president of USA?</p>
+    <p> A: George Washington T</p>
+    <p> A: Thomas Jefferson</p>
+    <p> A: James Madison</p>
+
+    <p> Q: Did American Civil War begin in 1861? </p>
+    <p> A: No</p>
+    <p> A: Yes T</p>
+
+
+    <form method="POST" class="post-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="save btn btn-default">Save</button>
+    </form>
+{% endblock %}

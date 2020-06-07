@@ -8,7 +8,15 @@ class QuizForm(forms.ModelForm):
         fields = ('title',)
 
 
+class QuizDeletionForm(forms.Form):
+    delete_quiz = forms.BooleanField(required=False)
+
+
 # class QuestionForm(forms.ModelForm):
+
+class QuizUploadForm(forms.Form):
+    quiz_file = forms.FileField(label='Select a file',
+                                help_text='max size is 2 MB')
 
 
 class QuestionForm(forms.Form):
