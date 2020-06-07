@@ -18,6 +18,14 @@
                 </a>
             {% endif %}
         {% endfor %}
+        <h1> Your attempts as opponent: </h1>
+        {% for attempt in attempts %}
+            {% if attempt.opponent == user and attempt.attemptquestion_set.count != 0 %}
+                <a href="/take/{{ attempt.pk }}">
+                    <h2>{{ attempt.quiz.title }}</h2>
+                </a>
+            {% endif %}
+        {% endfor %}
         <h1> Your finished attempts: </h1>
         {% for attempt in attempts %}
             {% if attempt.author == user and attempt.attemptquestion_set.count == 0 %}

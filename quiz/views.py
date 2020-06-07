@@ -201,59 +201,26 @@ def deactivate_quiz(request, quizid):
     return redirect('Quiz-Home')
 
 
-def answer_question(request, questionid, attemptid):
-    question = Question.objects.get(pk=questionid)
-    attempt = Attempt.objects.get(pk=attemptid)
-    form = AnswerForm(question=question)
-    if User_Answer.objects.filter(attempt_id=attemptid, question_id=questionid).first():
-        return redirect('Take-Quiz', attemptid=attemptid)
-
-    if request.method == 'POST':
-        form = AnswerForm(request.POST, question=question)
-
-        if form.is_valid():
-            answers = list(question.answer_set.all())
-            answers.sort(key=lambda x: x.pk)
-
-            for answer_num, is_correct in form.cleaned_data.items():
-                if is_correct and answer_num == 'is_correct1':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=question, answer=answers[0])
-
-                elif is_correct and answer_num == 'is_correct2':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=question, answer=answers[1])
-                elif is_correct and answer_num == 'is_correct3':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=question, answer=answers[2])
-
-                elif is_correct and answer_num == 'is_correct4':
-                    user_answer = User_Answer.objects.create(attempt=attempt, question=question, answer=answers[3])
-
-            return redirect('Take-Quiz', attemptid=attemptid)
-    else:
-        form = UserAnswerForm()
-    context = {
-        'form': form,
-        'question': question
-    }
-
-    return render(request, 'quiz/answerquestion.html', context=context)
-
-
-import logging
-
-
 def take_quiz(request, attemptid):
-    logger = logging.getLogger("mylogger")
-
-    # Put the logging info within your django view
-
     attempt = Attempt.objects.get(pk=attemptid)
-    if attempt.attemptquestion_set.count() == 0:
+    user = request.user
+    if attempt.opponent != user and attempt.author != user:
+        return redirect('Quiz-Home')
+    if attempt.author == user and attempt.attemptquestion_set.filter(
+            author_answered=True).count() == attempt.attemptquestion_set.count():
         return redirect('Quiz-Summary', attemptid)
-    aq = attempt.attemptquestion_set.first()
+    if attempt.opponent == user and attempt.attemptquestion_set.filter(
+            opponent_answered=True).count() == attempt.attemptquestion_set.count():
+        return redirect('Quiz-Summary', attemptid)
+
+    if attempt.author == user:
+        aq = attempt.attemptquestion_set.filter(author_answered=False).first()
+    else:
+        aq = attempt.attemptquestion_set.filter(opponent_answered=False).first()
     q = aq.question
     print(q.question)
     form = QuizAnswerForm(request.POST or None, question=q)
-    # print(form.cleaned_data)
+
     if form.is_valid():
         answers = list(q.answer_set.all())
         answers.sort(key=lambda x: x.pk)
@@ -261,7 +228,11 @@ def take_quiz(request, attemptid):
         print(form.cleaned_data['answers'], "abcdf")
 
         for j in [int(i) for i in form.cleaned_data['answers']]:
-            User_Answer.objects.create(attempt=attempt, question=q, answer=answers[j])
+            if attempt.author == user:
+                User_Answer.objects.create(attempt=attempt, question=q, answer=answers[j], opponent=False)
+            else:
+                User_Answer.objects.create(attempt=attempt, question=q, answer=answers[j], opponent=True)
+
         aq.delete()
         return redirect('Take-Quiz', attemptid=attemptid)
 
@@ -273,25 +244,23 @@ def take_quiz(request, attemptid):
     return render(request, 'quiz/answerquestion.html', context=context)
 
 
-def quiz_forms(quiz, data=None):
-    questions = Question.objects.filter(quiz=quiz).order_by('id')
-    form_list = []
-    for pos, question in enumerate(questions):
-        form_list.append(QuizAnswerForm(question, data, prefix=pos))
-    return form_list
-
-
 def quiz_attempt(request, quiz_id):
     quiz = Quiz.objects.get(pk=quiz_id)
 
     if request.method == 'POST':
         form = AttemptForm(request.POST)
 
-        if form.is_valid() and form.cleaned_data['new_attempt']:
+        if form.is_valid():
             attempt = quiz.attempt_set.create(author=request.user)
             questions = quiz.question_set.all()
+            if form.cleaned_data["opponent"]:
+                attempt.opponent = User.objects.get(username=form.cleaned_data["opponent"])
+                attempt.save()
             for q in questions:
-                attempt.attemptquestion_set.create(attempt=attempt, question=q)
+                if form.cleaned_data["opponent"]:
+                    attempt.attemptquestion_set.create(attempt=attempt, question=q, opponent_answered=False)
+                else:
+                    attempt.attemptquestion_set.create(attempt=attempt, question=q)
 
             return redirect('Take-Quiz', attempt.id)
 
@@ -307,8 +276,9 @@ def quiz_attempt(request, quiz_id):
 class Qna:
     def __init__(self, questionid, attemptid):
         self.q = Question.objects.get(pk=questionid)
-        self.a = User_Answer.objects.filter(attempt_id=attemptid, question_id=questionid)
+        self.a = User_Answer.objects.filter(attempt_id=attemptid, question_id=questionid, opponent=False)
         self.ca = Answer.objects.filter(question=questionid, is_correct=True)
+        self.opponentAnswer = User_Answer.objects.filter(attempt_id=attemptid, question_id=questionid, opponent=True)
 
     def get_question(self):
         return self.q
@@ -316,7 +286,21 @@ class Qna:
     def get_answer(self):
         return self.a
 
-    def answers_correct(self):
+    def get_opponent_answer(self):
+        return self.opponentAnswer
+
+    def is_answered(self):
+        author_answered = self.a.count() != 0
+        opponent_answered = self.opponentAnswer.count() != 0
+        return author_answered, opponent_answered
+
+    def author_answered(self):
+        return self.a.count() != 0
+
+    def opponent_answered(self):
+        return self.opponentAnswer.count() != 0
+
+    def author_answers_correct(self):
         if self.a.count() != self.ca.count():
             return False
         for ans in self.a:
@@ -336,7 +320,7 @@ def count_attempt_results(attempt):
         qnas.append(Qna(question.pk, attempt.pk))
 
     for i, qna in enumerate(qnas):
-        if qna.answers_correct():
+        if qna.author_answers_correct():
             count += 1
             key = "Question " + str(i + 1)
             question_stats[key] = question_stats[key] + 1
