@@ -3,10 +3,10 @@
 {% block content %}
     
     <h2>{{ quiz.title }}</h2>
-    <h3>Do you want to start this quiz?</h3>
+    <h3>If you want rival enter their mail</h3>
     <form method="POST" class="post-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="save btn btn-default">Save</button>
+        <button type="submit" class="save btn btn-default">Start</button>
     </form>
 {% endblock %}

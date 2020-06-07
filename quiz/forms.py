@@ -155,4 +155,14 @@ class QuizAnswerForm(forms.Form):
 
 
 class AttemptForm(forms.Form):
-    new_attempt = forms.BooleanField(required=True)
+    # new_attempt = forms.ChoiceField(choices=[(1, "competitive attempt"), (2, "solo attempt")])
+    opponent = forms.CharField(required=False)
+
+    def is_valid(self):
+        valid = super(AttemptForm, self).is_valid()
+        if self.cleaned_data["opponent"] == "":
+            return True
+        if User.objects.filter(username=self.cleaned_data["opponent"]).exists():
+            return True
+        self.errors["opponent"] = "user does not exist"
+        return False
