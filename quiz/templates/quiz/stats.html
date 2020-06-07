@@ -3,16 +3,20 @@
 {% block content %}
     <div class="container">
         <h1 style="text-align: center;"> Total results summary </h1>
-        {% autoescape off%}
+        {% autoescape off %}
             {{ plot_div }}
         {% endautoescape %}
         <h1 style="text-align: center;"> Questions results summary </h1>
-        {% autoescape off%}
+        {% autoescape off %}
             {{ questions_bar }}
         {% endautoescape %}
-        <h1 style="text-align: center;"> View users' summaries </h1>
+        <h1 style="text-align: center;"> View attempts' summaries </h1>
         {% for attempt in attempts %}
-            <a href="/summary/{{attempt.pk}}"><h2>{{ attempt.author }}</h2></a>
+            <a href="{% url 'Quiz-Summary' attempt.id %}">
+                <h2>{{ attempt.author }}
+                    {% if attempt.opponent %}
+                        , {{ attempt.opponent }}
+                    {% endif %}</h2></a>
         {% endfor %}
     </div>
 {% endblock %}

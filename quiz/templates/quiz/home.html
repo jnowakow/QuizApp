@@ -10,32 +10,51 @@
         <a href="{% url 'Registration' %}">Sign Up</a>
     {% endif %}
     <div class="container">
-        <h1> Your open attempts: </h1>
+
+        <h1> Your open duel attempts: </h1>
         {% for attempt in attempts %}
-            {% if attempt.author == user and attempt.attemptquestion_set.count != 0 %}
-                <a href="/take/{{ attempt.pk }}">
+            {% if attempt.attemptquestion_set.count != 0 and attempt.opponent == user %}
+                <a href="{% url 'Take-Quiz' attempt.pk %}">
                     <h2>{{ attempt.quiz.title }}</h2>
                 </a>
-            {% endif %}
-        {% endfor %}
-        <h1> Your attempts as opponent: </h1>
-        {% for attempt in attempts %}
-            {% if attempt.opponent == user and attempt.attemptquestion_set.count != 0 %}
-                <a href="/take/{{ attempt.pk }}">
-                    <h2>{{ attempt.quiz.title }}</h2>
-                </a>
-            {% endif %}
-        {% endfor %}
-        <h1> Your finished attempts: </h1>
-        {% for attempt in attempts %}
-            {% if attempt.author == user and attempt.attemptquestion_set.count == 0 %}
-                <a href="/take/{{ attempt.pk }}">
+            {% elif attempt.attemptquestion_set.count != 0 and attempt.author == user and attempt.opponent is not None %}
+                <a href="{% url 'Take-Quiz' attempt.pk %}">
                     <h2>{{ attempt.quiz.title }}</h2>
                 </a>
             {% endif %}
         {% endfor %}
 
-        <h1> Avaiable quizes: </h1>
+        <h1> Your open solo attempts: </h1>
+        {% for attempt in attempts %}
+            {% if attempt.attemptquestion_set.count != 0 and attempt.author == user and attempt.opponent is None %}
+                <a href="{% url 'Take-Quiz' attempt.pk %}">
+                    <h2>{{ attempt.quiz.title }}</h2>
+                </a>
+            {% endif %}
+        {% endfor %}
+
+        <h1> Your finished duel attempts: </h1>
+        {% for attempt in attempts %}
+            {% if attempt.attemptquestion_set.count == 0 and attempt.opponent == user %}
+                <a href="{% url 'Take-Quiz' attempt.pk %}">
+                    <h2>{{ attempt.quiz.title }}</h2>
+                </a>
+            {% elif attempt.attemptquestion_set.count == 0 and attempt.author == user and attempt.opponent is not None %}
+                <a href="{% url 'Take-Quiz' attempt.pk %}">
+                    <h2>{{ attempt.quiz.title }}</h2>
+                </a>
+            {% endif %}
+        {% endfor %}
+        <h1> Your finished solo attempts: </h1>
+        {% for attempt in attempts %}
+            {% if attempt.attemptquestion_set.count == 0 and attempt.author == user and attempt.opponent is None %}
+                <a href="{% url 'Take-Quiz' attempt.pk %}">
+                    <h2>{{ attempt.quiz.title }}</h2>
+                </a>
+            {% endif %}
+        {% endfor %}
+
+        <h1> Available quizzes: </h1>
         {% for quiz in quizes %}
             {% if quiz.is_active %}
                 <a href="{% url 'Quiz-Attempt' quiz.pk %}">
@@ -44,7 +63,7 @@
             {% endif %}
         {% endfor %}
 
-        <h1> Your quizes: </h1>
+        <h1> Your quizzes: </h1>
         {% for quiz in quizes %}
             {% if user == quiz.author %}
                 <a href="{% url 'Quiz-Details' quiz.pk %}">
@@ -60,7 +79,7 @@
         {% endfor %}
         <br>
         {% if user.is_authenticated %}
-            <a href="/add">
+            <a href="{% url 'Quiz-Add' %}">
                 <h2>Add Quiz</h2>
             </a>
         {% endif %}
