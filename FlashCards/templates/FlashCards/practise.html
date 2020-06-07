@@ -2,10 +2,10 @@
 
 {% block content %}
     <div class="container">
-        <h2>{{ subject.subject }}</h2>
+       <a href="{% url 'Subjects-Details' subject.id %}"> <h1>{{ subject.subject }}</h1> </a>
         <div class="ml-5">
             {% for card in cards %}
-                <a href="{% url 'View-Card' card.pk 1 %}" class="btn btn-outline-primary">Card</a>
+                <a href="{% url 'View-Card-Practise' card.pk 1 %}" class="btn btn-outline-primary">Card</a>
 
             {% endfor %}
         </div>

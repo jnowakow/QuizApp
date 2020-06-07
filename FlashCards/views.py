@@ -51,7 +51,7 @@ def add_new_card(request, subject_id):
     return render(request, 'FlashCards/add_card.html', context=context)
 
 
-def view_card(request, card_id, side, ):
+def view_card_practise(request, card_id, side):
     card = Card.objects.get(pk=card_id)
     subject = card.subject
 
@@ -70,8 +70,29 @@ def view_card(request, card_id, side, ):
         'subject': subject,
 
     }
-    return render(request, 'FlashCards/view_card.html', context=context)
+    return render(request, 'FlashCards/view_card_practise.html', context=context)
 
+
+def view_card_known(request, card_id, side):
+    card = Card.objects.get(pk=card_id)
+    subject = card.subject
+
+    if request.method == 'POST':
+        form = MarkForm(request.POST)
+        if form.is_valid():
+            card.marked_as_known = form.cleaned_data['Known']
+            card.save()
+            return redirect('Subjects-Details', subject.pk)
+    else:
+        form = MarkForm(initial={'Known': card.marked_as_known})
+    context = {
+        'form': form,
+        'show_front': side,
+        'card': card,
+        'subject': subject,
+
+    }
+    return render(request, 'FlashCards/view_card_known.html', context=context)
 
 def edit_card(request, card_id):
     card = Card.objects.get(pk=card_id)
@@ -80,7 +101,7 @@ def edit_card(request, card_id):
         form = CardCreationForm(request.POST, request.FILES, instance=card)
         if form.is_valid():
             form.save()
-            return redirect('View-Card', card_id, 1)
+            return redirect('View-Card-Practise', card_id, 1)
 
     else:
         form = CardCreationForm(instance=card)

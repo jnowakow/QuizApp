@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container">
-        <a href="{% url 'Subjects-Details' subject.id %}"> <h1>{{ subject.subject }}</h1> </a>
+        <a href="{% url 'Practise' subject.id %}"> <h1>{{ subject.subject }}</h1> </a>
         {% if show_front == 1 %}
             <h3>Front side</h3>
             {% if card.front_side_text %}
@@ -12,7 +12,7 @@
                 <img src="{{ card.front_side_img.url }}" alt="img" width="400" height="379" >
             {% endif %}
             <p>
-                <a href="{% url 'View-Card' card.id 0 %}">Flip</a>
+                <a href="{% url 'View-Card-Practise' card.id 0 %}">Flip</a>
             </p>
         {% else %}
             <h3>Back side</h3>
@@ -23,7 +23,7 @@
                 <img src="{{ card.back_side_img.url }}" alt="img" width="400" height="379" >
             {% endif %}
             <p>
-            <a href="{% url 'View-Card' card.id 1 %}">Flip</a>
+            <a href="{% url 'View-Card-Practise' card.id 1 %}">Flip</a>
             </p>
         {% endif %}
         <a href="{% url 'Edit-Card' card.id %}">Edit</a>

@@ -8,6 +8,7 @@ urlpatterns = [
     path('addcard/<int:subject_id>', views.add_new_card, name='Add-Card'),
     path('practise/<int:subject_id>', views.practise, name="Practise"),
     path('known/<int:subject_id>', views.view_known, name='Known'),
-    path('view_card/<int:card_id>/<int:side>', views.view_card, name='View-Card'),
+    path('view_card_practise/<int:card_id>/<int:side>', views.view_card_practise, name='View-Card-Practise'),
+    path('view_card_known/<int:card_id>/<int:side>', views.view_card_known, name='View-Card-Known'),
     path('edit_card/<int:card_id>', views.edit_card, name="Edit-Card")
 ]

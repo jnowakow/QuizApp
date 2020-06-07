@@ -383,14 +383,10 @@ def statistics(request, quiz_id):
     users_number = list(stats.values())
     total_users_number = sum(users_number)
 
-    total_correct_diff = list(map(lambda x: total_users_number - x, users_number))
-    print(total_correct_diff)
+    summary_bar = go.Pie(values=users_number, labels=results, showlegend=True)
 
-    summary_bar = go.Bar(x=results, y=users_number, name="Number of users", showlegend=True)
-    sup_bar = go.Bar(x=results, y=total_correct_diff, name='Supplement to total number', showlegend=True)
-
-    plot_div = plot({"data": [summary_bar, sup_bar],
-                     "layout": go.Layout(barmode="stack", xaxis=dict(title='Total points', titlefont_size=16))
+    plot_div = plot({"data": [summary_bar],
+                     "layout": go.Layout(legend=dict(title="Result", font=dict(size=20)), font=dict(size=20))
                      }, output_type='div')
 
     question_numbers = list(question_stats.keys())
@@ -401,7 +397,9 @@ def statistics(request, quiz_id):
     correct_answers_bar = go.Bar(x=question_numbers, y=right_answers, name="Number of correct answers", showlegend=True)
     wrong_answers_bar = go.Bar(x=question_numbers, y=wrong_answers, name='Number of wrong answers', showlegend=True)
     questions_bar = plot({"data": [correct_answers_bar, wrong_answers_bar],
-                          "layout": go.Layout(barmode='stack', xaxis=dict(title='Questions summary', titlefont_size=16))
+                          "layout": go.Layout(barmode='stack',
+                                              xaxis=dict(title='Questions summary', titlefont_size=20),
+                                              font=dict(size=16))
                           }, output_type='div')
 
     context = {
