@@ -6,20 +6,19 @@
         File format rules:
     </p>
     <ul>
-            <li> line with question starts with "Q: " </li>>
-            <li> line with answer starts with "A: " </li>>
-            <li> line with correct answer should end with "T" </li>>
+            <li> line with question starts with "Q: " </li>
+            <li> line with answer starts with "A: " </li>
+            <li> line with correct answer should end with "T" </li>
     </ul>
-    <p> Exemple file: </p>
-    <p> Q: Who was first president of USA?</p>
-    <p> A: George Washington T</p>
-    <p> A: Thomas Jefferson</p>
-    <p> A: James Madison</p>
-
-    <p> Q: Did American Civil War begin in 1861? </p>
-    <p> A: No</p>
-    <p> A: Yes T</p>
-
+    <p> Exemple file: <br>
+        Q: Who was first president of USA? <br>
+        A: George Washington T <br>
+        A: Thomas Jefferson <br>
+        A: James Madison <br>
+        Q: Did American Civil War begin in 1861? <br>
+        A: No <br>
+        A: Yes T <br>
+    </p>
 
     <form method="POST" class="post-form" enctype="multipart/form-data">
         {% csrf_token %}

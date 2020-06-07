@@ -1,6 +1,6 @@
 from django import forms
 from .models import *
-
+from .utils.validators import file_size_validator
 
 class QuizForm(forms.ModelForm):
     class Meta:
@@ -12,11 +12,10 @@ class QuizDeletionForm(forms.Form):
     delete_quiz = forms.BooleanField(required=False)
 
 
-# class QuestionForm(forms.ModelForm):
-
 class QuizUploadForm(forms.Form):
     quiz_file = forms.FileField(label='Select a file',
-                                help_text='max size is 2 MB')
+                                help_text='max size is 2 KB',
+                                validators=[file_size_validator])
 
 
 class QuestionForm(forms.Form):
