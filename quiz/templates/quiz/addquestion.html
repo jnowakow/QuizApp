@@ -6,7 +6,7 @@
         <h2>{{ quiz.title }}</h2>
         <div class="ml-5">
             {% for question in questions %}
-                <a href="/question/{{ question.id }}" class="btn btn-outline-primary">{{ question.question }}</a>
+                <a href="{% url 'Quiz-Question' question.id %}" class="btn btn-outline-primary">{{ question.question }}</a>
                 <div class="ml-3">
                     {% for answer in question.answer_set.all %}
                         <h4>{{ answer.answer }}</h4>

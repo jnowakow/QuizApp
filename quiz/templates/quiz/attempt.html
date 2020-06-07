@@ -3,7 +3,7 @@
 {% block content %}
     
     <h2>{{ quiz.title }}</h2>
-    <h3>If you want rival enter their mail</h3>
+    <h3>If you want rival enter their username</h3>
     <form method="POST" class="post-form">
         {% csrf_token %}
         {{ form.as_p }}
