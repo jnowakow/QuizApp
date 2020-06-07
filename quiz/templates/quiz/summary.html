@@ -12,7 +12,7 @@
         {% for qna in qnas %}
             <h1>{{ qna.get_question.question }}</h1>
 
-            {% if qna.answers_correct %}
+            {% if qna.author_answers_correct %}
                 <h1 class="text-success">answered correctly</h1>
             {% else %}
                 <h1 class="text-danger">answered wrong</h1>
