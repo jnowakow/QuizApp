@@ -6,7 +6,7 @@
         <h2>{{ quiz.title }}</h2>
         <div class="ml-5">
             {% for question in questions %}
-                <a href="/question/{{ question.id }}" class="btn btn-outline-primary">{{ question.question }}</a>
+                <a href="{% url 'Quiz-Question' question.id %}" class="btn btn-outline-primary">{{ question.question }}</a>
                 <div class="ml-3">
                     {% if user == quiz.author %}
                         {% for answer in question.answer_set.all %}
@@ -21,9 +21,9 @@
             {% endfor %}
         {% if user == quiz.author %}
             {% if quiz.is_editable %}
-                <a href="/addquestion/{{ quiz.id }}"><h2>Add question</h2></a>
+                <a href="{% url 'Quiz-AddQuestion' quiz.id %}"><h2>Add question</h2></a>
             {% endif %}
-            <a href="/stats/{{ quiz.id }}"><h2>View statistics</h2></a>
+            <a href="{% url 'Quiz-Stats' quiz.id %}"><h2>View statistics</h2></a>
         {% endif %}
         </div>
     </div>

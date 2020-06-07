@@ -2,26 +2,56 @@
 
 {% block content %}
     <div class="container">
-        
-        <h1> Your result is: {{result}}/{{max}} </h1>
+        {% if not has_opponent %}
+            <h1> Your result is: {{ result }}/{{ max }} </h1>
+        {% elif not author_answered or not opponent_answered %}
+            <h1> Waiting for opponent answers:</h1>
+        {% elif result > opponent_result %}
+            <h1> {{ author }} won!</h1>
+        {% elif result < opponent_result %}
+            <h1>{{ opponent }} won!</h1>
+        {% else %}
+            <h1>draw</h1>
+        {% endif %}
 
-        {% autoescape off%}
-            {{ questions_bar }}
-        {% endautoescape %}
-        
+        {% if author_answered %}
+            {% autoescape off %}
+                {{ questions_bar }}
+            {% endautoescape %}
+        {% endif %}
+        {% if opponent_answered %}
+            {% autoescape off %}
+                {{ questions_bar_o }}
+            {% endautoescape %}
+        {% endif %}
+
         {% for qna in qnas %}
             <h1>{{ qna.get_question.question }}</h1>
 
-            {% if qna.author_answers_correct %}
-                <h1 class="text-success">answered correctly</h1>
-            {% else %}
-                <h1 class="text-danger">answered wrong</h1>
+            {% if author_answered %}
+                {% if qna.author_answers_correct %}
+                    <h2 class="text-success">{{ author }} answered correctly</h2>
+                {% else %}
+                    <h2 class="text-danger">{{ author }} answered wrong</h2>
+                {% endif %}
+                <h3>answers:</h3>
+                <ul>{% for ans in qna.get_answer %}
+                    <li>{{ ans.answer }}</li>
+                {% endfor %}</ul>
             {% endif %}
-            <h2>User answers:</h2>
-            <ul>{% for ans in qna.get_answer %}
-                <li>{{ ans.answer }}</li>
-            {% endfor %}</ul>
-            <h2>Correct answers:</h2>
+
+            {% if opponent_answered %}
+                {% if qna.opponent_answers_correct %}
+                    <h2 class="text-success">{{ opponent }} answered correctly</h2>
+                {% else %}
+                    <h2 class="text-danger">{{ opponent }} answered wrong</h2>
+                {% endif %}
+                <h3>answers:</h3>
+                <ul>{% for ans in qna.get_opponent_answer %}
+                    <li>{{ ans.answer }}</li>
+                {% endfor %}</ul>
+            {% endif %}
+            <h3>Correct answers:</h3>
             <ul>{% for ans in qna.ca %}
                 <li>{{ ans.answer }}</li>
             {% endfor %}</ul>

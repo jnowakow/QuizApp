@@ -18,7 +18,9 @@ def home(request):
     if not request.user.is_authenticated:
         return redirect('Start-Page')
 
+
     context = {
+
         'quizes': Quiz.objects.filter(),
         'attempts': Attempt.objects.all()
     }
@@ -232,8 +234,11 @@ def take_quiz(request, attemptid):
                 User_Answer.objects.create(attempt=attempt, question=q, answer=answers[j], opponent=False)
             else:
                 User_Answer.objects.create(attempt=attempt, question=q, answer=answers[j], opponent=True)
-
-        aq.delete()
+        if attempt.author == user:
+            aq.author_answered = True
+        else:
+            aq.opponent_answered = True
+        aq.save()
         return redirect('Take-Quiz', attemptid=attemptid)
 
     context = {
@@ -308,12 +313,22 @@ class Qna:
                 return False
         return True
 
+    def opponent_answers_correct(self):
+        if self.opponentAnswer.count() != self.ca.count():
+            return False
+        for ans in self.opponentAnswer:
+            if not self.ca.filter(pk=ans.answer.pk).exists():
+                return False
+        return True
+
 
 def count_attempt_results(attempt):
     count = 0
+    opponent_count = 0
     questions = attempt.quiz.question_set.all()
 
     question_stats = {"Question " + str(i + 1): 0 for i in range(questions.count())}
+    opponent_stats = {"Question " + str(i + 1): 0 for i in range(questions.count())}
 
     qnas = []
     for question in questions:
@@ -323,26 +338,59 @@ def count_attempt_results(attempt):
         if qna.author_answers_correct():
             count += 1
             key = "Question " + str(i + 1)
-            question_stats[key] = question_stats[key] + 1
+            question_stats[key] = 1
+        if qna.opponent_answers_correct():
+            opponent_count += 1
+            key = "Question " + str(i + 1)
+            opponent_stats[key] = 1
 
-    return qnas, count, question_stats
+    return qnas, count, opponent_count, question_stats, opponent_stats
 
 
 def quiz_summary(request, attemptid):
     attempt = Attempt.objects.get(pk=attemptid)
-    qnas, result, questions_stats = count_attempt_results(attempt)
+    qnas, result, opponent_result, questions_stats, opponent_stats = count_attempt_results(attempt)
+    author_answered = attempt.attemptquestion_set.filter(
+            author_answered=True).count() == attempt.attemptquestion_set.count()
+    has_opponent = attempt.opponent is not None
+    opponent_answered = attempt.attemptquestion_set.filter(
+            opponent_answered=True).count() == attempt.attemptquestion_set.count() and has_opponent
+    user = request.user
+
+    if (author_answered and opponent_answered) or not has_opponent:
+        for attempt_question in attempt.attemptquestion_set.all():
+            attempt_question.delete()
 
     question_numbers = list(questions_stats.keys())
     right_answers = list(questions_stats.values())
+    opponent_answers = list(opponent_stats.values())
     questions_bar = plot({"data": [go.Bar(x=question_numbers, y=right_answers, name="Points", showlegend=True)],
-                          "layout": {"title": {"text": "Points per question"}}},
+                          "layout": {"title": {"text": attempt.author.username}}},
                          output_type='div')
+    if (attempt.opponent is not None):
+        questions_bar_o = plot(
+            {"data": [go.Bar(x=question_numbers, y=opponent_answers, name="Points", showlegend=True)],
+             "layout": {"title": {"text": attempt.opponent.username}}},
+            output_type='div')
+    else:
+        questions_bar_o = None
 
+    if has_opponent:
+        opponent = attempt.opponent.username
+    else:
+        opponent = None
     context = {
+        'opponent_answered': opponent_answered,
+        'author_answered': author_answered,
+        'has_opponent': has_opponent,
         'qnas': qnas,
         'questions_bar': questions_bar,
+        'questions_bar_o': questions_bar_o,
         'result': result,
-        'max': len(qnas)
+        'opponent_result': opponent_result,
+        'max': len(qnas),
+        'author': attempt.author.username,
+        'opponent': opponent
     }
     return render(request, 'quiz/summary.html', context)
 
@@ -359,9 +407,12 @@ def statistics(request, quiz_id):
     question_stats = dict()
 
     for attempt in attempts:
-        _, count, q_stats = count_attempt_results(attempt)
+        _, count, opponent_count, q_stats, opponent_stats = count_attempt_results(attempt)
         update_dict(question_stats, q_stats)
+        update_dict(question_stats, opponent_stats)
         stats[count] = stats.get(count, 0) + 1
+        if attempt.opponent is not None:
+            stats[opponent_count] = stats.get(opponent_count, 0) + 1
 
     results = list(stats.keys())
     users_number = list(stats.values())
@@ -379,7 +430,12 @@ def statistics(request, quiz_id):
 
     question_numbers = list(question_stats.keys())
     right_answers = list(question_stats.values())
-    total_answers = len(attempts)
+    total_answers = 0
+    for a in attempts:
+        if a.opponent is None:
+            total_answers += 1
+        else:
+            total_answers += 2
     wrong_answers = list(map(lambda x: total_answers - x, right_answers))
 
     correct_answers_bar = go.Bar(x=question_numbers, y=right_answers, name="Number of correct answers", showlegend=True)
