@@ -7,6 +7,10 @@
             <a href="{%  url 'Practise' subject.id  %}" class="btn btn-outline-primary">To practise</a>
 
             <a href="{% url 'Add-Card' subject.pk %} "><h2>Add card</h2></a>
-
+            <form method="POST" class="post-form" >
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="save btn btn-default">Save</button>
+            </form>
         </div>
 {% endblock %}

@@ -248,14 +248,14 @@ def take_quiz(request, attemptid):
     else:
         aq = attempt.attemptquestion_set.filter(opponent_answered=False).first()
     q = aq.question
-    print(q.question)
+
     form = QuizAnswerForm(request.POST or None, question=q)
 
     if form.is_valid():
         answers = list(q.answer_set.all())
         answers.sort(key=lambda x: x.pk)
 
-        print(form.cleaned_data['answers'], "abcdf")
+
 
         for j in [int(i) for i in form.cleaned_data['answers']]:
             if attempt.author == user:

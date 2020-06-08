@@ -24,9 +24,9 @@ def parse(quiz_file, quiz_id):
                 answer_count += 1
                 if line[-1] == 'T':
                     valid_question = True
-                    answers[answer_count] = (line[:-1], True)
+                    answers[answer_count] = (line[2:-1], True)
                 else:
-                    answers[answer_count] = (line, False)
+                    answers[answer_count] = (line[2:], False)
 
                 line = quiz_file.readline().strip().decode('utf-8')
 

@@ -6,6 +6,10 @@ class SubjectCreationForm(forms.Form):
     subject = forms.CharField(max_length=100, required=True)
 
 
+class SubjectDeletionForm(forms.Form):
+    to_delete = forms.BooleanField(required=False)
+
+
 class CardCreationForm(forms.ModelForm):
     class Meta:
         model = Card
@@ -29,5 +33,8 @@ class CardCreationForm(forms.ModelForm):
 
 
 class MarkForm(forms.Form):
-    Known = forms.BooleanField(required=False)
+    known = forms.BooleanField(required=False)
 
+
+class CardEditionForm(CardCreationForm):
+    to_delete = forms.BooleanField(required=False)
